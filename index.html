@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmileCraft Dental Studio: voice receptionist demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10272b; --ink-2:#47616a; --enamel:#f3f7f7; --card:#ffffff; --line:#d5e2e1;
+  --teal:#0c8a84; --teal-soft:#d6efea; --gum:#c8446b; --gum-soft:#fbe3ea; --amber:#a86b00; --amber-soft:#fff1d6;
+  --head:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif; --body:'Hanken Grotesk','Segoe UI',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--enamel);color:var(--ink);font:400 16px/1.5 var(--body);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px clamp(16px,4vw,40px);border-bottom:1px solid var(--line);background:var(--card)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:34px;height:34px}
+.brand b{font:700 21px/1 var(--head);letter-spacing:-.01em;display:block}
+.brand span{font-size:13px;color:var(--ink-2)}
+.badge{font-size:13px;font-weight:600;background:var(--teal-soft);color:#075c58;padding:6px 12px;border-radius:999px;white-space:nowrap}
+
+main{display:grid;grid-template-columns:minmax(0,1.15fr)  main{display:grid;grid-template-columns:minmax(0,720px);justify-content:center;gap:24px;max-width:1180px;margin:0 auto;padding:24px clamp(16px,4vw,40px) 40px} minmax(0,1fr);gap:24px;max-width:1180px;margin:0 auto;padding:24px clamp(16px,4vw,40px) 40px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px}
+.call{padding:24px}
+h1{font:700 clamp(26px,4vw,34px)/1.1 var(--head);letter-spacing:-.02em;margin:0 0 6px}
+.sub{margin:0 0 20px;color:var(--ink-2);max-width:52ch}
+
+.stage{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:18px;border-radius:14px;background:var(--enamel)}
+#bars{flex:1 1 220px;height:72px;width:100%;min-width:180px}
+.status{min-width:170px}
+.status strong{display:block;font:600 17px/1.2 var(--head)}
+.status small{color:var(--ink-2);font-variant-numeric:tabular-nums}
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{border:0;border-radius:999px;padding:13px 26px;font-weight:600;font-size:16px;background:var(--ink);color:#fff;transition:transform .12s,background .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn.live{background:var(--gum)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+.err{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--gum-soft);color:#7d1e3d;display:none}
+
+.try{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.try li{padding:10px 14px;border-radius:12px;background:var(--enamel);color:var(--ink-2);font-size:15px}
+.try-h{margin:22px 0 8px;font:600 15px var(--head)}
+
+.transcript{margin-top:22px;border-top:1px solid var(--line);padding-top:16px}
+.transcript h2,.inspect h2{font:700 18px var(--head);margin:0 0 10px}
+#log{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow:auto;padding-right:4px}
+.msg{max-width:85%;padding:9px 13px;border-radius:14px;font-size:15.5px;white-space:pre-wrap}
+.msg small{display:block;font-size:12px;color:var(--ink-2);margin-bottom:2px}
+.msg.model{background:var(--teal-soft);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.user{background:var(--enamel);border:1px solid var(--line);align-self:flex-end;border-bottom-right-radius:4px}
+.empty{color:var(--ink-2);font-size:15px}
+
+.inspect{padding:20px;align-self:start;position:sticky;top:16px}
+@media (max-width:900px){.inspect{position:static}}
+.inspect p.lead{margin:0 0 14px;color:var(--ink-2);font-size:15px}
+#events{display:flex;flex-direction:column;gap:10px;max-height:430px;overflow:auto}
+.ev{border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 12px;font-size:14px;background:#fff}
+.ev.warn{border-left-color:var(--amber);background:var(--amber-soft)}
+.ev.critical{border-left-color:var(--gum);background:var(--gum-soft)}
+.ev.blocked{border-left-color:var(--gum)}
+.ev b{font:600 15px var(--head)}
+.ev code{font:12.5px ui-monospace,Menlo,Consolas,monospace;color:var(--ink-2);word-break:break-word}
+.path{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.path i{font-style:normal;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--teal-soft);color:#075c58}
+details{margin-top:16px;border-top:1px solid var(--line);padding-top:12px;font-size:14.5px}
+summary{cursor:pointer;font:600 15px var(--head)}
+details ul{margin:8px 0 0;padding-left:18px;color:var(--ink-2)}
+details li{margin:4px 0}
+footer{max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px) 36px;color:var(--ink-2);font-size:13.5px}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M13 7c3-2 6 0 7 0s4-2 7 0c4 3 3 9 1.5 13-1 3-1 9-3 12-1 1.5-3 1-3.5-1-.8-3-1-6-2-6s-1.2 3-2 6c-.5 2-2.5 2.5-3.5 1-2-3-2-9-3-12C10 16 9 10 13 7z" fill="#0c8a84"/></svg>
+    <div><b>SmileCraft Dental Studio</b><span>Indiranagar, Bengaluru</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="panel call" aria-labelledby="h">
+    <h1 id="h">Call our AI receptionist</h1>
+    <p class="sub">Talk the way you would on a phone call. Priya can answer questions about the clinic, book, move or cancel appointments, and knows when to send you to a hospital.</p>
+
+    <div class="stage">
+      <div class="status"><strong id="statusText">Ready when you are</strong><small id="timer">0:00</small></div>
+      <canvas id="bars" aria-hidden="true"></canvas>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="callBtn">Start call</button>
+      <button class="btn ghost" id="muteBtn" disabled>Mute mic</button>
+    </div>
+    <div class="err" id="err" role="alert"></div>
+
+    <p class="try-h">Things you could ask</p>
+    <ul class="try">
+      <li>"Do you have a slot for a check-up tomorrow evening?"</li>
+      <li>"How much does a root canal cost, and who does it?"</li>
+      <li>"I have a toothache since last night. Can someone see me today?"</li>
+      <li>"Can you move my appointment to Saturday?" (book one first)</li>
+    </ul>
+
+    <div class="transcript">
+      <h2>Conversation</h2>
+      <div id="log" aria-live="polite"><span class="empty" id="emptyLog">The live transcript appears here once the call connects.</span></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  This is a demo with made-up clinic details. Please don't share real personal information. Your voice is streamed to Google's Gemini API to hold the conversation; this app doesn't store recordings. Headphones give the best experience and stop Priya hearing herself.
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+const WORKLET = `
+class PcmCapture extends AudioWorkletProcessor {
+  constructor(){ super(); this.ratio = sampleRate/16000; this.pos=0; this.acc=0; this.cnt=0;
+    this.out = new Int16Array(640); this.n=0; this.sq=0; }
+  process(inputs){
+    const ch = inputs[0] && inputs[0][0];
+    if(!ch) return true;
+    for(let i=0;i<ch.length;i++){
+      const x = ch[i]; this.sq += x*x; this.acc += x; this.cnt++; this.pos++;
+      if(this.pos >= this.ratio){
+        this.pos -= this.ratio;
+        const v = Math.max(-1, Math.min(1, this.acc/this.cnt)); this.acc=0; this.cnt=0;
+        this.out[this.n++] = v < 0 ? v*32768 : v*32767;
+        if(this.n === this.out.length){
+          const level = Math.sqrt(this.sq/(this.out.length*this.ratio)); this.sq=0;
+          const buf = this.out.slice().buffer; this.n=0;
+          this.port.postMessage({pcm: buf, level}, [buf]);
+        }
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('pcm-capture', PcmCapture);`;
+
+const S = {ws:null, ctx:null, stream:null, node:null, analyser:null, nextTime:0, sources:new Set(),
+           ready:false, muted:false, timer:null, t0:0, micLevel:0, outLevel:0, maxSec:240, ending:false,
+           bubble:{user:null, model:null}, last:null};
+
+const callBtn=$('#callBtn'), muteBtn=$('#muteBtn'), statusText=$('#statusText'), timerEl=$('#timer'), errEl=$('#err');
+
+function setStatus(t){ statusText.textContent=t; }
+function showErr(t){ errEl.textContent=t; errEl.style.display=t?'block':'none'; }
+const fmt = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+
+/* ---------- transcript ---------- */
+function bubble(role, text){
+  $('#emptyLog')?.remove();
+  if(S.last !== role || !S.bubble[role]){
+    const d=document.createElement('div'); d.className='msg '+role;
+    d.innerHTML='<small>'+(role==='model'?'Priya':'You')+'</small><span></span>';
+    $('#log').appendChild(d); S.bubble[role]=d; S.last=role;
+    S.bubble[role==='model'?'user':'model']=null;
+  }
+  S.bubble[role].querySelector('span').textContent += text;
+  const log=$('#log'); log.scrollTop=log.scrollHeight;
+}
+
+/* ---------- inspector ---------- */
+function addEvent(cls, html){
+  if(!$('#events')) return;
+  $('#emptyEv')?.remove();
+  const d=document.createElement('div'); d.className='ev '+cls; d.innerHTML=html;
+  const box=$('#events'); box.appendChild(d); box.scrollTop=box.scrollHeight;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function onTool(e){
+  const path=e.trace.map(n=>`<i>${esc(n)}</i>`).join('');
+  addEvent(e.blocked?'blocked':'', `<b>${esc(e.name)}</b> <span>${esc(e.summary)}</span><div class="path">${path}</div><code>${esc(JSON.stringify(e.args))}</code>`);
+}
+function onGuard(e){
+  const who = e.source==='caller' ? 'Heard from caller' : 'Checked Priya\'s reply';
+  addEvent(e.severity, `<b>${esc(e.code.replace(/_/g,' '))}</b><div>${who}. ${esc(e.detail)}</div>`);
+}
+
+/* ---------- playback (24 kHz PCM16 from Gemini) ---------- */
+function playPcm(ab){
+  const i16=new Int16Array(ab,0,Math.floor(ab.byteLength/2)); if(!i16.length) return;
+  const f32=new Float32Array(i16.length); for(let i=0;i<i16.length;i++) f32[i]=i16[i]/32768;
+  const buf=S.ctx.createBuffer(1,f32.length,24000); buf.copyToChannel(f32,0);
+  const src=S.ctx.createBufferSource(); src.buffer=buf; src.connect(S.outGain);
+  const now=S.ctx.currentTime; if(S.nextTime < now+0.02) S.nextTime = now+0.06;
+  src.start(S.nextTime); S.nextTime += buf.duration;
+  S.sources.add(src); src.onended=()=>S.sources.delete(src);
+}
+function stopPlayback(){ S.sources.forEach(s=>{try{s.stop()}catch(_){}}); S.sources.clear(); S.nextTime=0; }
+
+/* ---------- call lifecycle ---------- */
+async function startCall(){
+  showErr(''); S.ending=false; S.ready=false; S.last=null; S.bubble={user:null,model:null};
+  callBtn.disabled=true; setStatus('Connecting…');
+  try{
+    S.ctx = new (window.AudioContext||window.webkitAudioContext)(); await S.ctx.resume();
+    S.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
+  }catch(e){
+    showErr('Microphone access was blocked. Allow the microphone for this page and try again. If you are viewing this inside Hugging Face, open the Space in its own tab.');
+    return resetUi('Ready when you are');
+  }
+  try{
+    await S.ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET],{type:'application/javascript'})));
+    const src=S.ctx.createMediaStreamSource(S.stream);
+    S.node=new AudioWorkletNode(S.ctx,'pcm-capture');
+    const mute=S.ctx.createGain(); mute.gain.value=0;
+    src.connect(S.node); S.node.connect(mute); mute.connect(S.ctx.destination);
+    S.outGain=S.ctx.createGain(); S.analyser=S.ctx.createAnalyser(); S.analyser.fftSize=512;
+    S.outGain.connect(S.analyser); S.analyser.connect(S.ctx.destination);
+  }catch(e){ showErr('Your browser could not start audio processing. Try a recent Chrome, Edge or Safari.'); return endCall(false,'Ready when you are'); }
+
+  const proto = location.protocol==='https:'?'wss':'ws';
+  S.ws=new WebSocket(`${proto}://${location.host}/ws`); S.ws.binaryType='arraybuffer';
+  S.node.port.onmessage = ev => {
+    S.micLevel = ev.data.level;
+    if(S.ready && !S.muted && S.ws.readyState===1) S.ws.send(ev.data.pcm);
+  };
+  S.ws.onmessage = ev => {
+    if(typeof ev.data !== 'string'){ playPcm(ev.data); return; }
+    const e=JSON.parse(ev.data);
+    switch(e.type){
+      case 'ready': S.ready=true; S.maxSec=e.max_seconds||240; S.t0=Date.now(); setStatus('Priya is on the line');
+        callBtn.textContent='End call'; callBtn.classList.add('live'); callBtn.disabled=false; muteBtn.disabled=false;
+        S.timer=setInterval(()=>{ const s=(Date.now()-S.t0)/1000; timerEl.textContent=`${fmt(s)} of ${fmt(S.maxSec)}`; },500); break;
+      case 'transcript': bubble(e.role,e.text); break;
+      case 'interrupted': stopPlayback(); S.bubble.model=null; break;
+      case 'turn_complete': S.bubble.user=null; S.bubble.model=null; break;
+      case 'tool': onTool(e); break;
+      case 'guardrail': onGuard(e); break;
+      case 'error': showErr(e.message); endCall(false,'Call failed'); break;
+      case 'ended': {
+        const why={time_limit:'Demo time limit reached',idle:'Call ended: no audio heard',abusive_language:'Call ended',server_going_away:'Call ended by the server',client_hung_up:'Call ended'};
+        endCall(false, why[e.reason]||'Call ended'); break; }
+    }
+  };
+  S.ws.onclose = () => { if(!S.ending) endCall(false,'Call ended'); };
+  S.ws.onerror = () => showErr('Could not reach the server.');
+}
+
+function endCall(notify=true, label='Call ended'){
+  if(S.ending) return; S.ending=true; S.ready=false;
+  try{ if(notify && S.ws && S.ws.readyState===1) S.ws.send(JSON.stringify({type:'end'})); }catch(_){}
+  try{ S.ws && S.ws.close(); }catch(_){}
+  stopPlayback(); clearInterval(S.timer);
+  S.stream && S.stream.getTracks().forEach(t=>t.stop());
+  try{ S.node && S.node.disconnect(); }catch(_){}
+  try{ S.ctx && S.ctx.close(); }catch(_){}
+  S.stream=S.ctx=S.node=S.analyser=null;
+  resetUi(label);
+}
+function resetUi(label){
+  setStatus(label); callBtn.textContent='Start call'; callBtn.classList.remove('live'); callBtn.disabled=false;
+  muteBtn.disabled=true; muteBtn.textContent='Mute mic'; S.muted=false;
+}
+callBtn.onclick = () => (S.ws && !S.ending && S.ready) ? endCall(true) : (callBtn.disabled?0:startCall());
+muteBtn.onclick = () => { S.muted=!S.muted; muteBtn.textContent=S.muted?'Unmute mic':'Mute mic'; };
+
+/* ---------- voice bars ---------- */
+const cv=$('#bars'), g=cv.getContext('2d'); const N=36; const hist=new Array(N).fill(0);
+function fit(){ const r=cv.getBoundingClientRect(), d=devicePixelRatio||1; cv.width=r.width*d; cv.height=r.height*d; }
+addEventListener('resize',fit); fit();
+const td=new Uint8Array(256);
+function draw(){
+  let out=0;
+  if(S.analyser){ S.analyser.getByteTimeDomainData(td); let m=0; for(const v of td) m=Math.max(m,Math.abs(v-128)); out=m/128; }
+  const lvl=Math.max(Math.min(1,S.micLevel*7)*(S.muted?0:1), Math.min(1,out*1.6));
+  const speaking = out>0.04;
+  hist.push(lvl); hist.shift();
+  g.clearRect(0,0,cv.width,cv.height);
+  const w=cv.width/N;
+  for(let i=0;i<N;i++){
+    const h=Math.max(4*(devicePixelRatio||1), hist[i]*cv.height*0.95);
+    g.fillStyle = speaking ? '#0c8a84' : '#47616a';
+    g.globalAlpha = 0.35 + 0.65*(i/N);
+    g.beginPath(); g.roundRect(i*w+w*0.2,(cv.height-h)/2,w*0.6,h,w*0.3); g.fill();
+  }
+  g.globalAlpha=1; requestAnimationFrame(draw);
+}
+draw();
+addEventListener('beforeunload',()=>{ if(S.ws) try{S.ws.close()}catch(_){} });
+</script>
+</body>
+</html>
